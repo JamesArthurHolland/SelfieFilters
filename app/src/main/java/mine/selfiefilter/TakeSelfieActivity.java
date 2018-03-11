@@ -73,7 +73,7 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
 
     public static final int REQUEST_WRITE_STORAGE = 0;
 
-    private int[] mResources = { // TODO change names
+    private int[] mResources = {
         R.drawable.filter1,
         R.drawable.filter2,
         R.drawable.filter3
@@ -238,7 +238,6 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
         @Override
         public void onPictureTaken(byte[] data, Camera camera)
         {
-            // TODO Auto-generated method stub
             Bitmap cameraBitmap = BitmapFactory.decodeByteArray
                 (data, 0, data.length);
 
@@ -274,19 +273,27 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
             canvas.rotate(270);
 
 
+            camera.startPreview();
+
             File storagePath = new File(Environment.
                 getExternalStorageDirectory() + "/PhotoAR/");
             storagePath.mkdirs();
 
-            File myImage = new File(storagePath,
-                Long.toString(System.currentTimeMillis()) + ".jpg");
 
             try
             {
+                File myImage = File.createTempFile(Long.toString(System.currentTimeMillis()), ".png", getCacheDir());
                 FileOutputStream out = new FileOutputStream(myImage);
                 newImage.compress(Bitmap.CompressFormat.JPEG, 80, out);
                 out.flush();
                 out.close();
+
+                Intent showPictureIntent = new Intent(TakeSelfieActivity.this, PicturePreviewActivity.class);
+                showPictureIntent.putExtra(PicturePreviewActivity.TEMP_FILE_PATH, myImage.getAbsolutePath());
+
+                newImage.recycle();
+
+                startActivity(showPictureIntent);
             }
             catch(FileNotFoundException e)
             {
@@ -297,15 +304,6 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
                 Log.d("In Saving File", e + "");
             }
 
-            camera.startPreview();
-
-            newImage.recycle();
-
-            Intent intent = new Intent();
-            intent.setAction(Intent.ACTION_VIEW);
-
-            intent.setDataAndType(Uri.parse("file://" + myImage.getAbsolutePath()), "image/*");
-            startActivity(intent);
 
         }
     };
@@ -332,8 +330,6 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
     public void surfaceChanged(SurfaceHolder holder,
                                int format, int width, int height)
     {
-        // TODO Auto-generated method stub
-
         if(mPreviewing)
         {
             mCamera.stopPreview();
@@ -343,27 +339,19 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
         {
             final Camera.Parameters parameters = mCamera.getParameters();
             Size size = getOptimalPreviewSize(parameters.getSupportedPictureSizes(), mScreenWidth, mScreenHeight);
-            parameters.setPreviewSize(size.width, size.height); // TODO
+            parameters.setPreviewSize(size.width, size.height);
             parameters.setPictureSize(size.width, size.height);
-//            parameters.setPictureSize(1280, 960);
             if (this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
                 mCamera.setDisplayOrientation(90);
             }
-
-            // parameters.setRotation(90);
             mCamera.setParameters(parameters);
-
             mCamera.setPreviewDisplay(mCameraSurfaceHolder);
             mCamera.startPreview();
-
-            List<String> pList = mCamera.getParameters().getSupportedFlashModes();
-
 
             mPreviewing = true;
         }
         catch (IOException e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -451,7 +439,6 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
     @Override
     public void surfaceDestroyed(SurfaceHolder holder)
     {
-        // TODO Auto-generated method stub
         mCamera.stopPreview();
         mCamera.release();
         mCamera = null;

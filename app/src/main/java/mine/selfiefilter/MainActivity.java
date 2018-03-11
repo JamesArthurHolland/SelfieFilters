@@ -59,13 +59,10 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewPhoto
                     // Permission has already been granted
                     launchTakeSelfieActivity();
                 }
-
             }
         });
 
-        String[] data = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48"};
-
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.rvNumbers);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.pictures);
         int numberOfColumns = 3;
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
         mRecyclerAdapter = new RecyclerViewPhotoAdapter(this, getFiles());
@@ -101,14 +98,9 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewPhoto
 
     @Override
     public void onItemClick(View view, int position) {
-        Log.i("TAG", "You clicked number " + mRecyclerAdapter.getItem(position) + ", which is at cell position " + position);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        Intent showPictureIntent = new Intent(MainActivity.this, PicturePreviewActivity.class);
+        showPictureIntent.putExtra(PicturePreviewActivity.TEMP_FILE_PATH, mRecyclerAdapter.getItem(position).getAbsolutePath());
+        startActivity(showPictureIntent);
     }
 
     @Override
@@ -123,8 +115,7 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewPhoto
                     launchTakeSelfieActivity();
 
                 } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                    // permission denied
                 }
                 return;
             }
