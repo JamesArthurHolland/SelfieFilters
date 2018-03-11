@@ -8,6 +8,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
@@ -38,6 +39,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.nhaarman.supertooltips.ToolTip;
+import com.nhaarman.supertooltips.ToolTipRelativeLayout;
+import com.nhaarman.supertooltips.ToolTipView;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -65,6 +71,8 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
     private int mScreenHeight = 1280;
     private int mScreenWidth = 960;
 
+    public static final int REQUEST_WRITE_STORAGE = 0;
+
     private int[] mResources = { // TODO change names
         R.drawable.filter1,
         R.drawable.filter2,
@@ -88,6 +96,15 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
         getSupportActionBar().hide();
 
         setContentView(R.layout.activity_take_selfie);
+
+        ToolTipRelativeLayout toolTipRelativeLayout = (ToolTipRelativeLayout) findViewById(R.id.tool_tip);
+
+        ToolTip toolTip = new ToolTip()
+            .withText("Swipe to view filters.")
+            .withTextColor(Color.WHITE)
+            .withColor(Color.BLUE)
+            .withShadow();
+        toolTipRelativeLayout.showToolTipForView(toolTip, findViewById(R.id.tool_tip));
 
         mCustomPagerAdapter = new CustomPagerAdapter(this, mScreenWidth);
 
@@ -152,9 +169,17 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
             @Override
             public void onClick(View v)
             {
-                mCamera.takePicture(cameraShutterCallback,
-                    cameraPictureCallbackRaw,
-                    cameraPictureCallbackJpeg);
+                if (ContextCompat.checkSelfPermission(TakeSelfieActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                    ActivityCompat.requestPermissions(TakeSelfieActivity.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_WRITE_STORAGE);
+                } else {
+                    // Permission has already been granted
+                    takePicture();
+                }
             }
         });
 
@@ -188,8 +213,6 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
                 }
             }
         });
-
-
     }
 
     Camera.ShutterCallback cameraShutterCallback = new Camera.ShutterCallback()
@@ -286,6 +309,12 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
 
         }
     };
+
+    private void takePicture() {
+        mCamera.takePicture(cameraShutterCallback,
+            cameraPictureCallbackRaw,
+            cameraPictureCallbackJpeg);
+    }
 
     public static Camera getCameraInstance(int cameraId){
         Camera camera = null;
@@ -458,7 +487,7 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
             ImageView imageView = (ImageView) itemView.findViewById(R.id.imageView);
 
             position = position % mResources.length; // use modulo for infinite cycling
-            imageView.setImageResource(mResources[position]);
+            Glide.with(mContext).load(mResources[position]).into(imageView);
 
             container.addView(itemView);
 
@@ -468,6 +497,27 @@ public class TakeSelfieActivity extends AppCompatActivity implements SurfaceHold
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             container.removeView((LinearLayout) object);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_WRITE_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    takePicture();
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
         }
     }
 }

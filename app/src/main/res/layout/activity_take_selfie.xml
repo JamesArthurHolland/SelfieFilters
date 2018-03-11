@@ -41,6 +41,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
+            <com.nhaarman.supertooltips.ToolTipRelativeLayout
+                android:id="@+id/tool_tip"
+                android:layout_marginTop="200dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:tooltipText="here"/>
             <LinearLayout
                 android:id="@+id/buttonLayout"
                 android:layout_width="match_parent"

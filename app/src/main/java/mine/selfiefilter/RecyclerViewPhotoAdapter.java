@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -20,12 +22,14 @@ import java.util.ArrayList;
 
 public class RecyclerViewPhotoAdapter extends RecyclerView.Adapter<RecyclerViewPhotoAdapter.ViewHolder> {
 
-    private ArrayList<Bitmap> mPictures = new ArrayList<>();
+    private ArrayList<File> mPictures = new ArrayList<>();
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
+    private Context mContext;
 
     // data is passed into the constructor
-    RecyclerViewPhotoAdapter(Context context, ArrayList<Bitmap> pictures) {
+    RecyclerViewPhotoAdapter(Context context, ArrayList<File> pictures) {
+        this.mContext = context;
         this.mInflater = LayoutInflater.from(context);
         this.mPictures = pictures;
     }
@@ -40,8 +44,7 @@ public class RecyclerViewPhotoAdapter extends RecyclerView.Adapter<RecyclerViewP
     // binds the data to the textview in each cell
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Bitmap bitmap = mPictures.get(position);
-        holder.photoImageView.setImageBitmap(bitmap);
+        Glide.with(mContext).load(mPictures.get(position)).into(holder.photoImageView);
     }
 
     // total number of cells
@@ -68,7 +71,7 @@ public class RecyclerViewPhotoAdapter extends RecyclerView.Adapter<RecyclerViewP
     }
 
     // convenience method for getting data at click position
-    Bitmap getItem(int id) {
+    File getItem(int id) {
         return mPictures.get(id);
     }
 

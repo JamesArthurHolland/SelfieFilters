@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewPhoto
 {
     private RecyclerViewPhotoAdapter mRecyclerAdapter;
 
+    public static final int REQUEST_USE_CAMERA = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,8 +48,18 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewPhoto
         {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(MainActivity.this, TakeSelfieActivity.class);
-                startActivity(i);
+                if (ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.CAMERA},
+                        REQUEST_USE_CAMERA);
+                } else {
+                    // Permission has already been granted
+                    launchTakeSelfieActivity();
+                }
+
             }
         });
 
@@ -56,11 +68,16 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewPhoto
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.rvNumbers);
         int numberOfColumns = 3;
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
-        ArrayList<Bitmap> pictures = getBitmaps(getFiles());
-        mRecyclerAdapter = new RecyclerViewPhotoAdapter(this, pictures); // TODO pass bitmaps, do File -> Bitmap conversion first, faster.
+        mRecyclerAdapter = new RecyclerViewPhotoAdapter(this, getFiles()); // TODO pass bitmaps, do File -> Bitmap conversion first, faster.
         mRecyclerAdapter.setClickListener(this);
         recyclerView.setAdapter(mRecyclerAdapter);
 
+    }
+
+    private void launchTakeSelfieActivity()
+    {
+        Intent i = new Intent(MainActivity.this, TakeSelfieActivity.class);
+        startActivity(i);
     }
 
     private ArrayList<File> getFiles()
@@ -121,4 +138,24 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewPhoto
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_USE_CAMERA: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    launchTakeSelfieActivity();
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+        }
+    }
 }
